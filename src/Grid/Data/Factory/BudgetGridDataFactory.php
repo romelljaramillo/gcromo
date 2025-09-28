@@ -11,13 +11,6 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class BudgetGridDataFactory implements GridDataFactoryInterface
 {
-    private const STATUS_COLORS = [
-        'draft' => '#6c757d',
-        'pending' => '#ffc107',
-        'approved' => '#17a2b8',
-        'won' => '#28a745',
-        'lost' => '#dc3545',
-    ];
 
     private GridDataFactoryInterface $dataFactory;
     private TranslatorInterface $translator;
@@ -28,11 +21,13 @@ final class BudgetGridDataFactory implements GridDataFactoryInterface
         $this->translator = $translator;
     }
 
-    public function getData(SearchCriteriaInterface $searchCriteria)
+    public function getData(SearchCriteriaInterface $searchCriteria): GridData
     {
         $data = $this->dataFactory->getData($searchCriteria);
 
         $records = $data->getRecords()->all();
+        $statusColors = BudgetStatusProvider::badgeColors();
+
         foreach ($records as &$record) {
             $statusKey = $record['status'] ?? 'draft';
             if (!is_string($statusKey) || $statusKey === '') {
@@ -43,7 +38,7 @@ final class BudgetGridDataFactory implements GridDataFactoryInterface
 
             $label = BudgetStatusProvider::STATUSES[$statusKey] ?? ucfirst($statusKey);
             $record['status_label'] = $this->translator->trans($label, [], 'Modules.Gcromo.Admin');
-            $record['status_color'] = self::STATUS_COLORS[$statusKey] ?? self::STATUS_COLORS['draft'];
+            $record['status_color'] = $statusColors[$statusKey] ?? $statusColors['draft'];
 
             $record['dimension_height_cm'] = $this->formatDecimal($record['dimension_height_cm'] ?? null);
             $record['dimension_width_primary_cm'] = $this->formatDecimal($record['dimension_width_primary_cm'] ?? null);

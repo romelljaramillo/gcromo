@@ -6,8 +6,11 @@ use DateTimeImmutable;
 use Exception;
 use Gcromo\Form\Admin\BudgetType;
 use Gcromo\Form\Data\BudgetData;
+use Gcromo\Grid\Search\Filters\BudgetFilters;
 use Gcromo\Provider\BudgetStatusProvider;
 use Gcromo\Repository\BudgetRepository;
+use PrestaShop\PrestaShop\Core\Grid\GridFactory;
+use PrestaShop\PrestaShop\Core\Grid\Presenter\GridPresenterInterface;
 use PrestaShopBundle\Controller\Admin\FrameworkBundleAdminController;
 use PrestaShopBundle\Security\Annotation\AdminSecurity;
 use Symfony\Component\Form\FormInterface;
@@ -20,27 +23,26 @@ use Tools;
 class BudgetController extends FrameworkBundleAdminController
 {
     private BudgetRepository $budgetRepository;
+    private GridFactory $budgetGridFactory;
     private TranslatorInterface $translator;
+    private GridPresenterInterface $gridPresenter;
 
-    public function __construct(BudgetRepository $budgetRepository, TranslatorInterface $translator)
+    public function __construct(BudgetRepository $budgetRepository, TranslatorInterface $translator, GridFactory $budgetGridFactory, GridPresenterInterface $gridPresenter)
     {
         $this->budgetRepository = $budgetRepository;
         $this->translator = $translator;
+        $this->budgetGridFactory = $budgetGridFactory;
+        $this->gridPresenter = $gridPresenter;
     }
 
     /**
      * @AdminSecurity("is_granted('read', request.get('_legacy_controller'))")
      */
-    public function indexAction(): Response
+    public function indexAction(Request $request, BudgetFilters $filters): Response
     {
-        $budgets = $this->budgetRepository->findAll();
-
         return $this->render('@Modules/gcromo/views/templates/admin/budget/index.html.twig', [
             'layoutTitle' => $this->translator->trans('Budget manager', [], 'Modules.Gcromo.Admin'),
-            'budgets' => $budgets,
-            'statusLabels' => BudgetStatusProvider::STATUSES,
-            'statusBadgeClasses' => BudgetStatusProvider::badgeClasses(),
-            'deleteToken' => Tools::getAdminTokenLite('AdminGcromoBudget'),
+            'grid' => $this->gridPresenter->present($this->budgetGridFactory->getGrid($filters)),
         ]);
     }
 
@@ -98,14 +100,14 @@ class BudgetController extends FrameworkBundleAdminController
     {
         $token = $request->query->get('token');
         if (!$this->isTokenValid($token)) {
-            $this->addFlash('error', $this->trans('Invalid security token.', 'Modules.Gcromo.Admin'));
+            $this->addFlash('error', $this->translator->trans('Invalid security token.', [], 'Modules.Gcromo.Admin'));
 
             return $this->redirectToRoute('admin_gcromo_budget_index');
         }
 
         $this->budgetRepository->delete($budgetId);
 
-    $this->addFlash('success', $this->translator->trans('Budget deleted successfully.', [], 'Modules.Gcromo.Admin'));
+        $this->addFlash('success', $this->translator->trans('Budget deleted successfully.', [], 'Modules.Gcromo.Admin'));
 
         return $this->redirectToRoute('admin_gcromo_budget_index');
     }

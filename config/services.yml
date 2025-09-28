@@ -9,6 +9,9 @@ services:
     public: true
     tags:
       - { name: controller.service_arguments }
+    arguments:
+      $budgetGridFactory: '@gcromo.grid.factory.budget'
+      $gridPresenter: '@prestashop.core.grid.presenter.grid_presenter'
 
   Gcromo\Controller\Admin\ConfigurationController:
     public: true
@@ -24,6 +27,43 @@ services:
     arguments:
       $dbPrefix: '%database_prefix%'
 
+  gcromo.grid.definition.factory.budget:
+    class: 'Gcromo\Grid\Definition\BudgetGridDefinitionFactory'
+    parent: 'prestashop.core.grid.definition.factory.abstract_grid_definition'
+    autowire: false
+    autoconfigure: false
+    public: true
+
+  gcromo.grid.query_builder.budget:
+    class: 'Gcromo\Grid\Query\BudgetQueryBuilder'
+    arguments:
+      - '@doctrine.dbal.default_connection'
+      - '%database_prefix%'
+      - '@prestashop.core.query.doctrine_search_criteria_applicator'
+
+  gcromo.grid.data.factory.doctrine.budget:
+    class: PrestaShop\PrestaShop\Core\Grid\Data\Factory\DoctrineGridDataFactory
+    arguments:
+      - '@gcromo.grid.query_builder.budget'
+      - '@prestashop.core.hook.dispatcher'
+      - '@prestashop.core.grid.query.doctrine_query_parser'
+      - 'gcromo_budget'
+
+  gcromo.grid.data.factory.budget:
+    class: 'Gcromo\Grid\Data\Factory\BudgetGridDataFactory'
+    arguments:
+      - '@gcromo.grid.data.factory.doctrine.budget'
+      - '@translator'
+
+  gcromo.grid.factory.budget:
+    class: PrestaShop\PrestaShop\Core\Grid\GridFactory
+    public: true
+    arguments:
+      - '@gcromo.grid.definition.factory.budget'
+      - '@gcromo.grid.data.factory.budget'
+      - '@prestashop.core.grid.filter.form_factory'
+      - '@prestashop.core.hook.dispatcher'
+
   # Auto-registro de otros servicios
   Gcromo\Install\:
     resource: '../src/Install/*'
@@ -36,3 +76,6 @@ services:
 
   Gcromo\Provider\:
     resource: '../src/Provider/*'
+
+  Gcromo\Grid\:
+    resource: '../src/Grid/*'

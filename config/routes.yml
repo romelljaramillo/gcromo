@@ -22,6 +22,18 @@ admin_gcromo_budget_index:
     _legacy_controller: 'AdminGcromoBudget'
     _legacy_link: 'AdminGcromoBudget'
 
+admin_gcromo_budget_search:
+  path: /gcromo/budgets
+  methods: [POST]
+  defaults:
+    _controller: 'PrestaShopBundle:Admin/Common:searchGrid'
+    gridDefinitionFactoryServiceId: gcromo.grid.definition.factory.budget
+    redirectRoute: admin_gcromo_budget_index
+    _legacy_controller: 'AdminGcromoBudget'
+    _legacy_link: 'AdminGcromoBudget:submitFiltergcromo_budget'
+  options:
+    expose: true
+
 admin_gcromo_budget_create:
   path: /gcromo/budgets/new
   methods: [GET, POST]

@@ -4,12 +4,10 @@ namespace Gcromo\Grid\Definition;
 
 use PrestaShop\PrestaShop\Core\Grid\Action\GridActionCollection;
 use PrestaShop\PrestaShop\Core\Grid\Action\GridActionCollectionInterface;
-use PrestaShop\PrestaShop\Core\Grid\Action\Type\LinkGridAction;
 use PrestaShop\PrestaShop\Core\Grid\Action\Type\SimpleGridAction;
 use PrestaShop\PrestaShop\Core\Grid\Column\ColumnCollection;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\ActionColumn;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\BadgeColumn;
-use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\BulkActionColumn;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\DataColumn;
 use PrestaShop\PrestaShop\Core\Grid\Definition\Factory\AbstractFilterableGridDefinitionFactory;
 use PrestaShop\PrestaShop\Core\Grid\Definition\Factory\DeleteActionTrait;
@@ -43,17 +41,11 @@ class BudgetGridDefinitionFactory extends AbstractFilterableGridDefinitionFactor
     {
         $columns = (new ColumnCollection())
             ->add(
-                (new BulkActionColumn('budget_bulk'))
-                    ->setOptions([
-                        'bulk_field' => 'id_gcromo_budget',
-                    ])
-            )
-            ->add(
                 (new DataColumn('id_gcromo_budget'))
                     ->setName($this->trans('ID', [], 'Admin.Global'))
                     ->setOptions([
                         'field' => 'id_gcromo_budget',
-                        'attr' => ['class' => 'text-center'],
+                        'alignment' => 'center',
                     ])
             )
             ->add(
@@ -96,7 +88,7 @@ class BudgetGridDefinitionFactory extends AbstractFilterableGridDefinitionFactor
                     ->setName($this->trans('Height (cm)', [], 'Modules.Gcromo.Admin'))
                     ->setOptions([
                         'field' => 'dimension_height_cm',
-                        'attr' => ['class' => 'text-end'],
+                        'alignment' => 'right',
                     ])
             )
             ->add(
@@ -104,7 +96,7 @@ class BudgetGridDefinitionFactory extends AbstractFilterableGridDefinitionFactor
                     ->setName($this->trans('Primary width (cm)', [], 'Modules.Gcromo.Admin'))
                     ->setOptions([
                         'field' => 'dimension_width_primary_cm',
-                        'attr' => ['class' => 'text-end'],
+                        'alignment' => 'right',
                     ])
             )
             ->add(
@@ -112,7 +104,7 @@ class BudgetGridDefinitionFactory extends AbstractFilterableGridDefinitionFactor
                     ->setName($this->trans('Secondary width (cm)', [], 'Modules.Gcromo.Admin'))
                     ->setOptions([
                         'field' => 'dimension_width_secondary_cm',
-                        'attr' => ['class' => 'text-end'],
+                        'alignment' => 'right',
                     ])
             )
             ->add(
@@ -129,7 +121,7 @@ class BudgetGridDefinitionFactory extends AbstractFilterableGridDefinitionFactor
                         'field' => 'status_label',
                         'color_field' => 'status_color',
                         'badge_type' => '',
-                        'attr' => ['class' => 'text-center'],
+                        'alignment' => 'center',
                     ])
             )
             ->add(
@@ -193,6 +185,9 @@ class BudgetGridDefinitionFactory extends AbstractFilterableGridDefinitionFactor
             )
             ->add(
                 (new Filter('quote_date', DateRangeType::class))
+                    ->setTypeOptions([
+                        'required' => false,
+                    ])
                     ->setAssociatedColumn('quote_date')
             )
             ->add(
@@ -215,14 +210,6 @@ class BudgetGridDefinitionFactory extends AbstractFilterableGridDefinitionFactor
                 (new SimpleGridAction('common_refresh_list'))
                     ->setName($this->trans('Refresh list', [], 'Admin.Advparameters.Feature'))
                     ->setIcon('refresh')
-            )
-            ->add(
-                (new LinkGridAction('create_budget'))
-                    ->setName($this->trans('New budget', [], 'Modules.Gcromo.Admin'))
-                    ->setIcon('add')
-                    ->setOptions([
-                        'route' => 'admin_gcromo_budget_create',
-                    ])
             );
     }
 
