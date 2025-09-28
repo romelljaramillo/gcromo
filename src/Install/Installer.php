@@ -10,8 +10,53 @@ use Tab;
 
 class Installer
 {
-    private const TAB_PARENT_CLASS_NAME = 'AdminGcromo';
-    private const TAB_CHILD_CLASS_NAME = 'AdminGcromoBudget';
+    private const ADMIN_TAB_DEFINITIONS = [
+        [
+            'class_name' => 'AdminParentGcromo',
+            'parent_class_name' => '0',
+            'route_name' => null,
+            'icon' => 'summarize',
+            'visible' => true,
+            'wording' => 'GCromo',
+            'wording_domain' => 'Modules.Gcromo.Admin',
+        ],
+        [
+            'class_name' => 'AdminGcromo',
+            'parent_class_name' => 'AdminParentGcromo',
+            'route_name' => null,
+            'icon' => 'request_quote',
+            'visible' => true,
+            'wording' => 'Budgets',
+            'wording_domain' => 'Modules.Gcromo.Admin',
+        ],
+        [
+            'class_name' => 'AdminGcromoConfiguration',
+            'parent_class_name' => 'AdminParentGcromo',
+            'route_name' => 'admin_gcromo_configuration_index',
+            'icon' => 'settings',
+            'visible' => true,
+            'wording' => 'Configuration',
+            'wording_domain' => 'Modules.Gcromo.Admin',
+        ],
+        [
+            'class_name' => 'AdminGcromoCustomer',
+            'parent_class_name' => 'AdminParentGcromo',
+            'route_name' => 'admin_gcromo_customer_index',
+            'icon' => 'groups',
+            'visible' => true,
+            'wording' => 'Customers',
+            'wording_domain' => 'Modules.Gcromo.Admin',
+        ],
+        [
+            'class_name' => 'AdminGcromoBudget',
+            'parent_class_name' => 'AdminParentGcromo',
+            'route_name' => 'admin_gcromo_budget_index',
+            'icon' => 'request_quote',
+            'visible' => true,
+            'wording' => 'Budgets',
+            'wording_domain' => 'Modules.Gcromo.Admin',
+        ],
+    ];
 
     private Connection $connection;
     private string $dbPrefix;
@@ -43,34 +88,23 @@ class Installer
         $budgetTable = sprintf(
             'CREATE TABLE IF NOT EXISTS `%1$sgcromo_budget` (
                 `id_gcromo_budget` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-                `reference` VARCHAR(32) NOT NULL,
-                `id_customer` INT UNSIGNED NULL,
-                `title` VARCHAR(255) NOT NULL,
+                `quote_reference` VARCHAR(32) NOT NULL,
+                `quote_date` DATE NULL,
+                `customer_id` INT UNSIGNED NULL,
+                `customer_name` VARCHAR(255) NOT NULL DEFAULT "",
+                `product_name` VARCHAR(255) NOT NULL DEFAULT "",
+                `product_summary` TEXT NULL,
+                `work_scope` VARCHAR(255) NOT NULL DEFAULT "",
+                `dimension_height_cm` DECIMAL(10,2) NOT NULL DEFAULT 0,
+                `dimension_width_primary_cm` DECIMAL(10,2) NOT NULL DEFAULT 0,
+                `dimension_width_secondary_cm` DECIMAL(10,2) NOT NULL DEFAULT 0,
+                `sales_rep` VARCHAR(255) NOT NULL DEFAULT "",
                 `status` VARCHAR(32) NOT NULL DEFAULT "draft",
-                `total_tax_excl` DECIMAL(20,6) NOT NULL DEFAULT 0,
-                `total_tax_incl` DECIMAL(20,6) NOT NULL DEFAULT 0,
-                `valid_until` DATETIME NULL,
-                `date_add` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                `date_upd` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                UNIQUE KEY `uniq_gcromo_budget_reference` (`reference`),
-                KEY `idx_gcromo_budget_customer` (`id_customer`)
-            ) ENGINE=%2$s DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
-            $this->dbPrefix,
-            \pSQL(_MYSQL_ENGINE_)
-        );
-
-        $budgetLineTable = sprintf(
-            'CREATE TABLE IF NOT EXISTS `%1$sgcromo_budget_line` (
-                `id_gcromo_budget_line` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-                `id_gcromo_budget` INT UNSIGNED NOT NULL,
-                `description` VARCHAR(255) NOT NULL,
-                `quantity` DECIMAL(20,6) NOT NULL DEFAULT 1,
-                `unit_price_tax_excl` DECIMAL(20,6) NOT NULL DEFAULT 0,
-                `unit_price_tax_incl` DECIMAL(20,6) NOT NULL DEFAULT 0,
-                `position` INT UNSIGNED NOT NULL DEFAULT 0,
-                CONSTRAINT `fk_gcromo_budget_line_budget`
-                    FOREIGN KEY (`id_gcromo_budget`) REFERENCES `%1$sgcromo_budget`(`id_gcromo_budget`)
-                    ON DELETE CASCADE
+                `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY `uniq_gcromo_budget_reference` (`quote_reference`),
+                KEY `idx_gcromo_budget_customer` (`customer_id`),
+                KEY `idx_gcromo_budget_status` (`status`)
             ) ENGINE=%2$s DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
             $this->dbPrefix,
             \pSQL(_MYSQL_ENGINE_)
@@ -78,8 +112,15 @@ class Installer
 
         try {
             $this->connection->executeStatement($budgetTable);
-            $this->connection->executeStatement($budgetLineTable);
         } catch (DBALException $exception) {
+            \PrestaShopLogger::addLog(
+                sprintf('[GCromo] Failed to create gcromo_budget table: %s', $exception->getMessage()),
+                3,
+                null,
+                \Gcromo::class,
+                (int) $this->module->id
+            );
+
             return false;
         }
 
@@ -106,75 +147,92 @@ class Installer
 
     private function installTabs(): bool
     {
-        return $this->createParentTab() && $this->createChildTab();
-    }
-
-    private function uninstallTabs(): bool
-    {
-        $childId = (int) Tab::getIdFromClassName(self::TAB_CHILD_CLASS_NAME);
-        if ($childId) {
-            $tab = new Tab($childId);
-            $tab->delete();
-        }
-
-        $parentId = (int) Tab::getIdFromClassName(self::TAB_PARENT_CLASS_NAME);
-        if ($parentId) {
-            $tab = new Tab($parentId);
-            $tab->delete();
+        foreach (self::ADMIN_TAB_DEFINITIONS as $definition) {
+            if (false === $this->createTab($definition)) {
+                return false;
+            }
         }
 
         return true;
     }
 
-    private function createParentTab(): bool
+    private function uninstallTabs(): bool
     {
-        if ((int) Tab::getIdFromClassName(self::TAB_PARENT_CLASS_NAME)) {
-            return true;
+        foreach (array_reverse(self::ADMIN_TAB_DEFINITIONS) as $definition) {
+            $tabId = (int) Tab::getIdFromClassName($definition['class_name']);
+            if ($tabId) {
+                $tab = new Tab($tabId);
+                $tab->delete();
+            }
         }
 
-        $tab = new Tab();
-        $tab->active = 1;
-        $tab->class_name = self::TAB_PARENT_CLASS_NAME;
-        $tab->module = $this->module->name;
-        $tab->id_parent = (int) Tab::getIdFromClassName('AdminParentCustomer');
-        if (property_exists($tab, 'icon')) {
-            $tab->icon = 'summarize';
-        }
-
-        foreach ($this->languages as $lang) {
-            $tab->name[$lang['id_lang']] = $this->translator->trans('Budgets', [], 'Modules.Gcromo.Admin', $lang['locale']);
-        }
-
-        return (bool) $tab->add();
+        return true;
     }
 
-    private function createChildTab(): bool
+    private function createTab(array $definition): bool
     {
-        if ((int) Tab::getIdFromClassName(self::TAB_CHILD_CLASS_NAME)) {
+        if ((int) Tab::getIdFromClassName($definition['class_name'])) {
             return true;
         }
 
-        $parentId = (int) Tab::getIdFromClassName(self::TAB_PARENT_CLASS_NAME);
-        if (0 === $parentId) {
-            return false;
+        $parentId = 0;
+        $parentClassName = $definition['parent_class_name'] ?? null;
+
+        if (null !== $parentClassName && '' !== $parentClassName) {
+            if ('0' === $parentClassName || 0 === $parentClassName) {
+                $parentId = 0;
+            } else {
+                $parentId = (int) Tab::getIdFromClassName($parentClassName);
+            }
+        }
+
+        if (null !== $parentClassName && '' !== $parentClassName && '0' !== $parentClassName && 0 === $parentId) {
+            \PrestaShopLogger::addLog(
+                sprintf('[GCromo] Parent tab %s not found, falling back to root menu.', $parentClassName),
+                2,
+                null,
+                \Gcromo::class,
+                (int) $this->module->id
+            );
+
+            $parentId = 0;
         }
 
         $tab = new Tab();
-        $tab->active = 1;
-        $tab->class_name = self::TAB_CHILD_CLASS_NAME;
+        $tab->active = $definition['visible'] ?? true ? 1 : 0;
+        $tab->class_name = $definition['class_name'];
         $tab->module = $this->module->name;
         $tab->id_parent = $parentId;
-        if (property_exists($tab, 'route_name')) {
-            $tab->route_name = 'admin_gcromo_budget_index';
+
+        if (!empty($definition['route_name']) && property_exists($tab, 'route_name')) {
+            $tab->route_name = $definition['route_name'];
         }
-        if (property_exists($tab, 'icon')) {
-            $tab->icon = 'request_quote';
+
+        if (!empty($definition['icon']) && property_exists($tab, 'icon')) {
+            $tab->icon = $definition['icon'];
         }
 
         foreach ($this->languages as $lang) {
-            $tab->name[$lang['id_lang']] = $this->translator->trans('Budget manager', [], 'Modules.Gcromo.Admin', $lang['locale']);
+            $tab->name[$lang['id_lang']] = $this->translator->trans(
+                $definition['wording'] ?? $definition['class_name'],
+                [],
+                $definition['wording_domain'] ?? 'Modules.Gcromo.Admin',
+                $lang['locale']
+            );
         }
 
-        return (bool) $tab->add();
+        $added = (bool) $tab->add();
+
+        if (!$added) {
+            \PrestaShopLogger::addLog(
+                sprintf('[GCromo] Unable to create admin tab %s.', $definition['class_name']),
+                3,
+                null,
+                \Gcromo::class,
+                (int) $this->module->id
+            );
+        }
+
+        return $added;
     }
 }

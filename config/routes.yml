@@ -1,7 +1,51 @@
+admin_gcromo_configuration_index:
+  path: /gcromo/configuration
+  methods: [GET, POST]
+  defaults:
+    _controller: 'Gcromo\Controller\Admin\ConfigurationController::indexAction'
+    _legacy_controller: 'AdminGcromoConfiguration'
+    _legacy_link: 'AdminGcromoConfiguration'
+
+admin_gcromo_customer_index:
+  path: /gcromo/customers
+  methods: [GET]
+  defaults:
+    _controller: 'Gcromo\Controller\Admin\CustomerController::indexAction'
+    _legacy_controller: 'AdminGcromoCustomer'
+    _legacy_link: 'AdminGcromoCustomer'
+
 admin_gcromo_budget_index:
   path: /gcromo/budgets
   methods: [GET]
   defaults:
-    _controller: 'Gcromo\\Controller\\Admin\\BudgetController::indexAction'
+    _controller: 'Gcromo\Controller\Admin\BudgetController::indexAction'
     _legacy_controller: 'AdminGcromoBudget'
     _legacy_link: 'AdminGcromoBudget'
+
+admin_gcromo_budget_create:
+  path: /gcromo/budgets/new
+  methods: [GET, POST]
+  defaults:
+    _controller: 'Gcromo\Controller\Admin\BudgetController::createAction'
+    _legacy_controller: 'AdminGcromoBudget'
+    _legacy_link: 'AdminGcromoBudget:add'
+
+admin_gcromo_budget_edit:
+  path: /gcromo/budgets/{budgetId}/edit
+  methods: [GET, POST]
+  defaults:
+    _controller: 'Gcromo\Controller\Admin\BudgetController::editAction'
+    _legacy_controller: 'AdminGcromoBudget'
+    _legacy_link: 'AdminGcromoBudget:update'
+  requirements:
+    budgetId: '\d+'
+
+admin_gcromo_budget_delete:
+  path: /gcromo/budgets/{budgetId}/delete
+  methods: [GET]
+  defaults:
+    _controller: 'Gcromo\Controller\Admin\BudgetController::deleteAction'
+    _legacy_controller: 'AdminGcromoBudget'
+    _legacy_link: 'AdminGcromoBudget:delete'
+  requirements:
+    budgetId: '\d+'

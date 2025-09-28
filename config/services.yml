@@ -4,11 +4,35 @@ services:
     autoconfigure: true
     public: false
 
-  Gcromo\:
-    resource: '../src/*'
-    exclude: '../src/Resources/**'
-
+  # Configuración específica para controladores
   Gcromo\Controller\Admin\BudgetController:
     public: true
     tags:
       - { name: controller.service_arguments }
+
+  Gcromo\Controller\Admin\ConfigurationController:
+    public: true
+    tags:
+      - { name: controller.service_arguments }
+
+  Gcromo\Controller\Admin\CustomerController:
+    public: true
+    tags:
+      - { name: controller.service_arguments }
+
+  Gcromo\Repository\BudgetRepository:
+    arguments:
+      $dbPrefix: '%database_prefix%'
+
+  # Auto-registro de otros servicios
+  Gcromo\Install\:
+    resource: '../src/Install/*'
+
+  Gcromo\Form\Admin\:
+    resource: '../src/Form/Admin/*'
+
+  Gcromo\Form\Data\:
+    resource: '../src/Form/Data/*'
+
+  Gcromo\Provider\:
+    resource: '../src/Provider/*'

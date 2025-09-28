@@ -3,15 +3,76 @@
 {% block content %}
   <div class="gcromo-budget">
     <div class="card">
-      <div class="card-header">
+      <div class="card-header d-flex align-items-center justify-content-between">
         <h1 class="h3 mb-0">{{ 'Budget manager'|trans({}, 'Modules.Gcromo.Admin') }}</h1>
+        <a class="btn btn-primary" href="{{ path('admin_gcromo_budget_create') }}">
+          <i class="material-icons">add</i>
+          {{ 'New budget'|trans({}, 'Modules.Gcromo.Admin') }}
+        </a>
       </div>
-      <div class="card-body">
-        <p class="text-muted mb-3">
-          {{ 'Welcome to GCromo budgets. Use this section to draft, approve and share quotes with your customers.'|trans({}, 'Modules.Gcromo.Admin') }}
-        </p>
-        <div class="alert alert-info" role="alert">
-          {{ 'No budgets have been created yet. Start by clicking the "Add new budget" button.'|trans({}, 'Modules.Gcromo.Admin') }}
+      <div class="card-body p-0">
+        <div class="table-responsive mb-0">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th>{{ 'Reference'|trans({}, 'Modules.Gcromo.Admin') }}</th>
+                <th>{{ 'Quote date'|trans({}, 'Modules.Gcromo.Admin') }}</th>
+                <th>{{ 'Customer'|trans({}, 'Modules.Gcromo.Admin') }}</th>
+                <th>{{ 'Product'|trans({}, 'Modules.Gcromo.Admin') }}</th>
+                <th>{{ 'Work scope'|trans({}, 'Modules.Gcromo.Admin') }}</th>
+                <th class="text-end">{{ 'Height (cm)'|trans({}, 'Modules.Gcromo.Admin') }}</th>
+                <th class="text-end">{{ 'Primary width (cm)'|trans({}, 'Modules.Gcromo.Admin') }}</th>
+                <th class="text-end">{{ 'Secondary width (cm)'|trans({}, 'Modules.Gcromo.Admin') }}</th>
+                <th>{{ 'Sales representative'|trans({}, 'Modules.Gcromo.Admin') }}</th>
+                <th>{{ 'Status'|trans({}, 'Modules.Gcromo.Admin') }}</th>
+                <th class="text-end">{{ 'Actions'|trans({}, 'Modules.Gcromo.Admin') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if budgets is empty %}
+                <tr>
+                  <td colspan="11" class="text-center text-muted py-4">
+                    {{ 'No budgets have been created yet.'|trans({}, 'Modules.Gcromo.Admin') }}
+                  </td>
+                </tr>
+              {% else %}
+                {% for budget in budgets %}
+                  <tr>
+                    <td>{{ budget.quote_reference }}</td>
+                    <td>{{ budget.quote_date ? budget.quote_date|date('Y-m-d') : '—' }}</td>
+                    <td>{{ budget.customer_name ?: ('Guest'|trans({}, 'Admin.Global')) }}</td>
+                    <td>{{ budget.product_name ?: '—' }}</td>
+                    <td>{{ budget.work_scope ?: '—' }}</td>
+                    <td class="text-end">{{ budget.dimension_height_cm is not null ? budget.dimension_height_cm|number_format(2, '.', ',') : '—' }}</td>
+                    <td class="text-end">{{ budget.dimension_width_primary_cm is not null ? budget.dimension_width_primary_cm|number_format(2, '.', ',') : '—' }}</td>
+                    <td class="text-end">{{ budget.dimension_width_secondary_cm is not null ? budget.dimension_width_secondary_cm|number_format(2, '.', ',') : '—' }}</td>
+                    <td>{{ budget.sales_rep ?: '—' }}</td>
+                    <td>
+                      {% set statusKey = budget.status ?: 'draft' %}
+                      {% set badgeClass = statusBadgeClasses[statusKey]|default('badge-secondary') %}
+                      <span class="badge badge-pill {{ badgeClass }}">{{ statusLabels[statusKey]|default(statusKey|capitalize) }}</span>
+                    </td>
+                    <td class="text-end">
+                      <div class="btn-group" role="group" aria-label="{{ 'Budget actions'|trans({}, 'Modules.Gcromo.Admin') }}">
+                        <a class="btn btn-sm btn-outline-secondary" href="{{ path('admin_gcromo_budget_edit', {'budgetId': budget.id_gcromo_budget}) }}">
+                          <i class="material-icons">edit</i>
+                          {{ 'Edit'|trans({}, 'Modules.Gcromo.Admin') }}
+                        </a>
+                        <a
+                          class="btn btn-sm btn-outline-danger"
+                          href="{{ path('admin_gcromo_budget_delete', {'budgetId': budget.id_gcromo_budget, 'token': deleteToken}) }}"
+                          data-confirm="{{ 'Are you sure you want to delete this budget?'|trans({}, 'Modules.Gcromo.Admin') }}"
+                        >
+                          <i class="material-icons">delete</i>
+                          {{ 'Delete'|trans({}, 'Modules.Gcromo.Admin') }}
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              {% endif %}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

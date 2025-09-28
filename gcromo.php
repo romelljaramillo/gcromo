@@ -33,39 +33,11 @@ class Gcromo extends Module
     public function __construct()
     {
         $this->name = 'gcromo';
-        $this->author = 'GCromo';
+        $this->author = 'Roanja';
         $this->version = self::MODULE_VERSION;
         $this->need_instance = 0;
         $this->bootstrap = true;
         $this->tab = 'administration';
-
-        $tabNames = [];
-        $tabChildNames = [];
-        foreach (Language::getLanguages(true) as $lang) {
-            $locale = $lang['locale'];
-            $tabNames[$locale] = $this->trans('Budgets', [], 'Modules.Gcromo.Admin', $locale);
-            $tabChildNames[$locale] = $this->trans('Budget manager', [], 'Modules.Gcromo.Admin', $locale);
-        }
-
-        $this->tabs = [
-            [
-                'visible' => true,
-                'class_name' => 'AdminGcromo',
-                'parent_class_name' => 'AdminParentCustomer',
-                'name' => $tabNames,
-                'icon' => 'summarize',
-            ],
-            [
-                'visible' => true,
-                'class_name' => 'AdminGcromoBudget',
-                'parent_class_name' => 'AdminGcromo',
-                'name' => $tabChildNames,
-                'route_name' => 'admin_gcromo_budget_index',
-                'wording' => 'Budget manager',
-                'wording_domain' => 'Modules.Gcromo.Admin',
-                'icon' => 'request_quote',
-            ],
-        ];
 
         parent::__construct();
 
@@ -84,12 +56,15 @@ class Gcromo extends Module
 
         return parent::install()
             && $this->registerHook('displayBackOfficeHeader')
+            && $this->installConfiguration()
             && $this->getInstaller()->install();
     }
 
     public function uninstall()
     {
-        return $this->getInstaller()->uninstall() && parent::uninstall();
+        return $this->uninstallConfiguration()
+            && $this->getInstaller()->uninstall()
+            && parent::uninstall();
     }
 
     public function getContent()
@@ -100,9 +75,29 @@ class Gcromo extends Module
         }
 
         $router = $container->get('router');
-        Tools::redirectAdmin($router->generate('admin_gcromo_budget_index'));
+        if ($router) {
+            \Tools::redirectAdmin($router->generate('admin_gcromo_configuration_index'));
+        }
 
         return '';
+    }
+
+    private function installConfiguration(): bool
+    {
+        \Configuration::updateValue('GCROMO_REFERENCE_PREFIX', 'GC');
+        \Configuration::updateValue('GCROMO_DEFAULT_STATUS', 'draft');
+        \Configuration::updateValue('GCROMO_DEFAULT_SALES_REP', '');
+
+        return true;
+    }
+
+    private function uninstallConfiguration(): bool
+    {
+        \Configuration::deleteByName('GCROMO_REFERENCE_PREFIX');
+        \Configuration::deleteByName('GCROMO_DEFAULT_STATUS');
+        \Configuration::deleteByName('GCROMO_DEFAULT_SALES_REP');
+
+        return true;
     }
 
     public function hookDisplayBackOfficeHeader()
@@ -119,6 +114,14 @@ class Gcromo extends Module
 
         $container = SymfonyContainer::getInstance();
         if (null === $container) {
+            \PrestaShopLogger::addLog(
+                '[GCromo] Symfony container not available while attempting to build installer.',
+                3,
+                null,
+                static::class,
+                (int) $this->id
+            );
+
             throw new \RuntimeException('Symfony container not available.');
         }
 

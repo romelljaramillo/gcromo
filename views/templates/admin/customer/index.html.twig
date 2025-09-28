@@ -1,0 +1,56 @@
+{% extends '@PrestaShop/Admin/layout.html.twig' %}
+
+{% block content %}
+  <div class="gcromo-customers">
+    <div class="card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <h1 class="card-title h3 mb-0">{{ 'Customers with budgets'|trans({}, 'Modules.Gcromo.Admin') }}</h1>
+        <a class="btn btn-primary" href="{{ path('admin_gcromo_budget_index') }}">
+          {{ 'View budgets'|trans({}, 'Modules.Gcromo.Admin') }}
+        </a>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive mb-0">
+          <table class="table table-striped mb-0">
+            <thead>
+              <tr>
+                <th>{{ 'Customer'|trans({}, 'Modules.Gcromo.Admin') }}</th>
+                <th class="text-center">{{ 'Total budgets'|trans({}, 'Modules.Gcromo.Admin') }}</th>
+                <th>{{ 'Last updated'|trans({}, 'Modules.Gcromo.Admin') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% if customers is empty %}
+              <tr>
+                <td colspan="3" class="text-center text-muted py-4">
+                  {{ 'No budgets have been created for any customer yet.'|trans({}, 'Modules.Gcromo.Admin') }}
+                </td>
+              </tr>
+            {% else %}
+              {% for customer in customers %}
+                <tr>
+                  <td>
+                    {% if customer.customer_id %}
+                      <a href="{{ path('admin_customers_view', {'customerId': customer.customer_id}) }}">
+                        {{ customer.customer_name }}
+                      </a>
+                    {% else %}
+                      {{ customer.customer_name ?: ('Guest'|trans({}, 'Admin.Global')) }}
+                    {% endif %}
+                  </td>
+                  <td class="text-center">
+                    {{ customer.total_budgets }}
+                  </td>
+                  <td>
+                    {{ customer.last_updated ? customer.last_updated|date('Y-m-d H:i') : '—' }}
+                  </td>
+                </tr>
+              {% endfor %}
+            {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

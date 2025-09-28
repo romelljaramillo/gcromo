@@ -1,0 +1,31 @@
+{% extends '@PrestaShop/Admin/layout.html.twig' %}
+
+{% block content %}
+  <div class="gcromo-configuration">
+    <div class="card">
+      <div class="card-header">
+        <h1 class="card-title h3 mb-0">{{ 'Module configuration'|trans({}, 'Modules.Gcromo.Admin') }}</h1>
+      </div>
+      <div class="card-body">
+        {{ form_start(form) }}
+          <div class="row">
+            <div class="col-md-6">
+              {{ form_row(form.referencePrefix) }}
+            </div>
+            <div class="col-md-6">
+              {{ form_row(form.defaultStatus) }}
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              {{ form_row(form.defaultSalesRep) }}
+            </div>
+          </div>
+          <div class="mt-3">
+            {{ form_widget(form.save) }}
+          </div>
+        {{ form_end(form) }}
+      </div>
+    </div>
+  </div>
+{% endblock %}
