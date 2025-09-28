@@ -1,0 +1,25 @@
+{
+  "name": "gcromo/gcromo",
+  "description": "Gestión de presupuestos para PrestaShop 8.2.3",
+  "type": "prestashop-module",
+  "license": "AFL-3.0",
+  "require": {
+    "php": ">=7.4",
+    "ext-json": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Gcromo\\": "src/"
+    }
+  },
+  "config": {
+    "prepend-autoloader": false
+  },
+  "extra": {
+    "prestashop": {
+      "compatible-versions": [
+        "8.2.3"
+      ]
+    }
+  }
+}

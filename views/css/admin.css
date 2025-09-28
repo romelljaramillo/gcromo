@@ -1,0 +1,14 @@
+.gcromo-budget .card {
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.gcromo-budget .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gcromo-budget .card-header h1 {
+  font-weight: 600;
+}

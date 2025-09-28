@@ -1,0 +1,7 @@
+admin_gcromo_budget_index:
+  path: /gcromo/budgets
+  methods: [GET]
+  defaults:
+    _controller: 'Gcromo\\Controller\\Admin\\BudgetController::indexAction'
+    _legacy_controller: 'AdminGcromoBudget'
+    _legacy_link: 'AdminGcromoBudget'

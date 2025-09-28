@@ -1,0 +1,19 @@
+{% extends '@PrestaShop/Admin/layout.html.twig' %}
+
+{% block content %}
+  <div class="gcromo-budget">
+    <div class="card">
+      <div class="card-header">
+        <h1 class="h3 mb-0">{{ 'Budget manager'|trans({}, 'Modules.Gcromo.Admin') }}</h1>
+      </div>
+      <div class="card-body">
+        <p class="text-muted mb-3">
+          {{ 'Welcome to GCromo budgets. Use this section to draft, approve and share quotes with your customers.'|trans({}, 'Modules.Gcromo.Admin') }}
+        </p>
+        <div class="alert alert-info" role="alert">
+          {{ 'No budgets have been created yet. Start by clicking the "Add new budget" button.'|trans({}, 'Modules.Gcromo.Admin') }}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
